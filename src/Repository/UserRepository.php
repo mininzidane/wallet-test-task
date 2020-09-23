@@ -3,7 +3,6 @@
 namespace App\Repository;
 
 use App\Entity\User;
-use App\Entity\Wallet;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -18,22 +17,6 @@ class UserRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, User::class);
-    }
-
-    public function getWalletByOwner(User $user, string $walletNumber): ?Wallet
-    {
-        /** @var User $entity */
-        $entity = $this->createQueryBuilder('u')
-            ->innerJoin(Wallet::class, 'w')
-            ->addSelect('w')
-            ->where('u = :user')
-            ->andWhere('w.number = :number')
-            ->setParameter('user', $user)
-            ->setParameter('number', $walletNumber)
-            ->getQuery()
-            ->getResult()
-        ;
-        return $entity[1] ?? null;
     }
 
     // /**

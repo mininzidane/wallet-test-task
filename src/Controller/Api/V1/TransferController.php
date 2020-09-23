@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controller\Api\V1;
 
 use App\Entity\User;
-use App\Repository\UserRepository;
 use App\Repository\WalletRepository;
 use App\Service\FundTransfer;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,7 +24,6 @@ class TransferController extends AbstractController
      */
     public function transfer(
         Request $request,
-        UserRepository $userRepository,
         WalletRepository $walletRepository,
         FundTransfer $fundTransfer
     ): JsonResponse
@@ -40,7 +38,7 @@ class TransferController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        $walletFrom = $userRepository->getWalletByOwner($user, $walletNumberFrom);
+        $walletFrom = $walletRepository->getByOwner($user, $walletNumberFrom);
         if ($walletFrom === null) {
             return $this->errorResponse('Wallet to transfer from not found', Response::HTTP_NOT_FOUND);
         }
