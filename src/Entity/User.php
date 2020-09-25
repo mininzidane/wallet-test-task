@@ -14,6 +14,8 @@ class User implements UserInterface
 {
     public const ROLE_USER = 'ROLE_USER';
 
+    public const WALLETS_PER_USER = 10;
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -52,6 +54,11 @@ class User implements UserInterface
      */
     private $wallets;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $password;
+
     public function __construct()
     {
         $this->wallets = new ArrayCollection();
@@ -77,7 +84,14 @@ class User implements UserInterface
 
     public function getPassword(): ?string
     {
-        return null;
+        return $this->password;
+    }
+
+    public function setPassword(string $password): self
+    {
+        $this->password = $password;
+
+        return $this;
     }
 
     public function getFirstname(): ?string

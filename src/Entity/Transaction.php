@@ -2,18 +2,17 @@
 
 namespace App\Entity;
 
-use App\Repository\TransactionLogRepository;
-use Doctrine\Common\Collections\ArrayCollection;
+use App\Repository\TransactionRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=TransactionLogRepository::class)
+ * @ORM\Entity(repositoryClass=TransactionRepository::class)
  * @ORM\Table(indexes={
  *     @ORM\Index(name="wallet_from_id", columns={"wallet_from_id"}),
  *     @ORM\Index(name="wallet_to_id", columns={"wallet_to_id"})
  * })
  */
-class TransactionLog
+class Transaction
 {
     /**
      * @ORM\Id
@@ -35,7 +34,7 @@ class TransactionLog
     private $walletTo;
 
     /**
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="integer")
      */
     private $amount;
 
@@ -78,12 +77,12 @@ class TransactionLog
         return $this;
     }
 
-    public function getAmount(): ?float
+    public function getAmount(): ?int
     {
         return $this->amount;
     }
 
-    public function setAmount(float $amount): self
+    public function setAmount(int $amount): self
     {
         $this->amount = $amount;
 

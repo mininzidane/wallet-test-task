@@ -3,8 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\WalletRepository;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=WalletRepository::class)
@@ -14,25 +14,30 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Wallet
 {
+    public const SATOSHI_IN_BTC = 100000000;
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups({"wallet_details"})
      */
     private $id;
 
     /**
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="integer")
      */
     private $balance;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups({"wallet_details"})
      */
     private $title;
 
     /**
      * @ORM\Column(type="string", length=32)
+     * @Groups({"wallet_details"})
      */
     private $number;
 
@@ -57,12 +62,12 @@ class Wallet
         return $this->id;
     }
 
-    public function getBalance(): ?float
+    public function getBalance(): ?int
     {
         return $this->balance;
     }
 
-    public function setBalance(float $balance): self
+    public function setBalance(int $balance): self
     {
         $this->balance = $balance;
 

@@ -9,9 +9,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 abstract class AbstractController extends \Symfony\Bundle\FrameworkBundle\Controller\AbstractController
 {
-    public function successResponse(string $message = '', $responseCode = Response::HTTP_OK): JsonResponse
+    public function successResponse(array $data = [], $responseCode = Response::HTTP_OK): JsonResponse
     {
-        return new JsonResponse(['message' => $message], $responseCode);
+        return new JsonResponse($data, $responseCode);
     }
 
     public function errorResponse(string $message = '', $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR): JsonResponse
