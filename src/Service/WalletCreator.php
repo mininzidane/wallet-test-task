@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\User;
 use App\Entity\Wallet;
+use App\Exception\WalletCountExceededException;
 use Doctrine\ORM\EntityManagerInterface;
 
 class WalletCreator
@@ -25,10 +26,10 @@ class WalletCreator
         $this->walletNumberGenerator = $walletNumberGenerator;
     }
 
-    public function create(User $user, string $title): ?Wallet
+    public function create(User $user, string $title): Wallet
     {
         if ($user->getWallets()->count() >= User::WALLETS_PER_USER) {
-            return null;
+            throw new WalletCountExceededException();
         }
 
         $wallet = new Wallet();

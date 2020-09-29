@@ -14,8 +14,8 @@ abstract class AbstractController extends \Symfony\Bundle\FrameworkBundle\Contro
         return new JsonResponse($data, $responseCode);
     }
 
-    public function errorResponse(string $message = '', $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR): JsonResponse
+    public function errorResponse(array $data = [], $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR): JsonResponse
     {
-        return new JsonResponse(['message' => $message], $statusCode);
+        return new JsonResponse($data, $statusCode);
     }
 }

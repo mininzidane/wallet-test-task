@@ -24,7 +24,7 @@ class TransferControllerTest extends WebTestCase
     /**
      * @dataProvider paramsProvider
      */
-    public function testTransferError(string $walletNumberFrom, string $walletNumberTo, $amount, string $responseText): void
+    public function testTransferError(string $walletNumberFrom, string $walletNumberTo, $amount, $responseText): void
     {
         $this->client->request(Request::METHOD_POST, '/api/v1/transfer', [], [], $this->getAuthHeader(), \json_encode([
             'walletNumberFrom' => $walletNumberFrom,
@@ -34,16 +34,16 @@ class TransferControllerTest extends WebTestCase
 
         $response = $this->client->getResponse();
         $responseBody = \json_decode($response->getContent(), true);
-        self::assertSame($responseBody['message'], $responseText);
+        self::assertSame($responseBody['error'], $responseText);
     }
 
     public function paramsProvider() :array
     {
         return [
             ['1234567890', '2345678901', 99999999, 'Insufficient Funds'],
-            ['1234567890', '2345678901', 0, 'Incorrect amount'],
-            ['1234567890', '2345678901', -22, 'Incorrect amount'],
-            ['1234567890', '2345678901', 'test', 'Incorrect amount'],
+            ['1234567890', '2345678901', 0, ['amount' => ['Incorrect amount']]],
+            ['1234567890', '2345678901', -22, ['amount' => ['Incorrect amount']]],
+            ['1234567890', '2345678901', 'test', ['amount' => ['Incorrect amount']]],
             ['99999', '2345678901', 100, 'Wallet to transfer from not found'],
             ['1234567890', '99999', 100, 'Destination wallet not found'],
         ];

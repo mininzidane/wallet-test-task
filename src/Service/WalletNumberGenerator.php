@@ -4,38 +4,30 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Entity\Wallet;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\WalletRepository;
 
 class WalletNumberGenerator
 {
     private const NUMBER_LENGTH = 16;
     /**
-     * @var EntityManagerInterface
+     * @var WalletRepository
      */
-    private $entityManager;
+    private $walletRepository;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(WalletRepository $walletRepository)
     {
-        $this->entityManager = $entityManager;
+        $this->walletRepository = $walletRepository;
     }
 
     public function generate(): string
     {
         $number = $this->getRandomInt() . $this->getRandomInt();
 
-        if ($this->walletExists($number)) {
+        if ($this->walletRepository->checkWalletExists($number)) {
             return $this->generate();
         }
 
         return $number;
-    }
-
-    private function walletExists(string $number): bool
-    {
-        $wallet = $this->entityManager->getRepository(Wallet::class)->findOneBy(['number' => $number]);
-
-        return $wallet !== null;
     }
 
     private function getRandomInt(): string

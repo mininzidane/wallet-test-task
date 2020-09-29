@@ -32,4 +32,20 @@ class WalletRepository extends ServiceEntityRepository
             ->getOneOrNullResult()
         ;
     }
+
+    public function checkWalletExists(string $number): bool
+    {
+        $subQueryQb = $this->createQueryBuilder('w2');
+        $subQueryQb
+            ->andWhere('w2.number = :number')
+            ->andWhere('w2.id = w1.id')
+        ;
+        $qb = $this->createQueryBuilder('w1');
+        $qb
+            ->select('1')
+            ->where($qb->expr()->exists($subQueryQb->getDQL()))
+            ->setParameter('number', $number)
+        ;
+        return $qb->getQuery()->getOneOrNullResult() !== null;
+    }
 }

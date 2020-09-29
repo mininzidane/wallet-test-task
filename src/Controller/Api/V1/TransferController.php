@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Constraints\Positive;
+use Symfony\Component\Validator\ConstraintViolation;
+use Symfony\Component\Validator\Validation;
 
 class TransferController extends AbstractController
 {
@@ -60,13 +63,23 @@ class TransferController extends AbstractController
         TransactionService $fundTransfer
     ): JsonResponse
     {
-        $data = \json_decode($request->getContent(), true);
-        $walletNumberFrom = $data['walletNumberFrom'] ?? '';
-        $walletNumberTo = $data['walletNumberTo'] ?? '';
-        $amount = (int)($data['amount'] ?? 0);
+        $walletNumberFrom = $request->request->get('walletNumberFrom');
+        $walletNumberTo = $request->request->get('walletNumberTo');
+        $amount = $request->request->getInt('amount', 0);
 
-        if ($amount <= 0) {
-            return $this->errorResponse('Incorrect amount', Response::HTTP_BAD_REQUEST);
+        $validator = Validation::createValidator();
+        $violations = $validator->validate($amount, [
+            new Positive(['message' => 'Incorrect amount'])
+        ]);
+
+        if (0 !== \count($violations)) {
+            $errors = [];
+            /** @var ConstraintViolation $violation */
+            foreach ($violations as $violation) {
+                $errors['amount'][] = $violation->getMessage();
+            }
+
+            return $this->errorResponse(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
         /** @var User $user */
@@ -75,19 +88,19 @@ class TransferController extends AbstractController
         $walletFrom = $walletRepository->getByOwner($user, $walletNumberFrom);
 
         if ($walletFrom === null) {
-            return $this->errorResponse('Wallet to transfer from not found', Response::HTTP_NOT_FOUND);
+            return $this->errorResponse(['error' => 'Wallet to transfer from not found'], Response::HTTP_NOT_FOUND);
         }
 
         $walletTo = $walletRepository->findOneBy(['number' => $walletNumberTo]);
 
         if ($walletTo === null) {
-            return $this->errorResponse('Destination wallet not found', Response::HTTP_NOT_FOUND);
+            return $this->errorResponse(['error' => 'Destination wallet not found'], Response::HTTP_NOT_FOUND);
         }
 
         try {
             $fundTransfer->transfer($walletFrom, $walletTo, $amount);
         } catch (\Throwable $e) {
-            return $this->errorResponse($e->getMessage());
+            return $this->errorResponse(['error' => $e->getMessage()]);
         }
 
         return $this->successResponse(['message' => 'Transfer successful']);

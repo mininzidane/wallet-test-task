@@ -51,17 +51,16 @@ class AuthController extends AbstractController
         UserRepository $userRepository
     ): JsonResponse
     {
-        $data = \json_decode($request->getContent(), true);
-        $username = $data['username'] ?? '';
-        $password = $data['password'] ?? '';
+        $username = $request->request->get('username');
+        $password = $request->request->get('password');
         $user = $userRepository->findOneBy(['username' => $username]);
 
         if ($user === null) {
-            return $this->errorResponse('User not found', Response::HTTP_NOT_FOUND);
+            return $this->errorResponse(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
         if (!$userPasswordEncoder->isPasswordValid($user, $password)) {
-            return $this->errorResponse('Password incorrect', Response::HTTP_BAD_REQUEST);
+            return $this->errorResponse(['error' => 'Password incorrect'], Response::HTTP_BAD_REQUEST);
         }
 
         return $this->successResponse(['token' => $user->getApiKey()]);

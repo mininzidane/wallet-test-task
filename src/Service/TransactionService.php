@@ -14,8 +14,6 @@ use Psr\Log\LoggerInterface;
 
 class TransactionService
 {
-    private const COMMISSION = 0.015;
-
     /**
      * @var EntityManagerInterface
      */
@@ -24,17 +22,25 @@ class TransactionService
      * @var LoggerInterface
      */
     private $logger;
+    /**
+     * @var CalculateService
+     */
+    private $calculateService;
 
-    public function __construct(EntityManagerInterface $entityManager, LoggerInterface $logger)
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        LoggerInterface $logger,
+        CalculateService $calculateService
+    )
     {
         $this->entityManager = $entityManager;
         $this->logger = $logger;
+        $this->calculateService = $calculateService;
     }
 
     public function transfer(Wallet $walletFrom, Wallet $walletTo, int $amount): void
     {
-        $amountWithCommission = (int)\round($amount * (1 + self::COMMISSION), 0, PHP_ROUND_HALF_DOWN);
-        $newBalance = $walletFrom->getBalance() - $amountWithCommission;
+        $newBalance = $this->calculateService->getDecreasedBalance($amount, $walletFrom->getBalance());
         if ($newBalance < 0) {
             throw new InsufficientFundsException();
         }
@@ -44,7 +50,7 @@ class TransactionService
         $this->entityManager->lock($walletTo, LockMode::PESSIMISTIC_WRITE);
         try {
             $walletFrom->setBalance($newBalance);
-            $walletTo->setBalance($walletTo->getBalance() + $amountWithCommission);
+            $walletTo->setBalance($this->calculateService->getIncreasedBalance($amount, $walletTo->getBalance()));
             $transaction = new Transaction();
             $transaction
                 ->setAmount(-$amount)

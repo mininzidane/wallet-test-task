@@ -15,6 +15,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\ConstraintViolation;
+use Symfony\Component\Validator\Validation;
 
 class WalletController extends AbstractController
 {
@@ -27,14 +31,17 @@ class WalletController extends AbstractController
      */
     private $serializer;
 
-    public function __construct(WalletCreator $walletCreator, SerializerInterface $serializer)
+    public function __construct(
+        WalletCreator $walletCreator,
+        SerializerInterface $serializer
+    )
     {
         $this->walletCreator = $walletCreator;
         $this->serializer = $serializer;
     }
 
     /**
-     * @Route("/create-wallet", name="api_create_wallet", methods={"POST"})
+     * @Route("/wallet", name="api_create_wallet", methods={"POST"})
      *
      * @SWG\Tag(name="Wallet")
      * @SWG\Parameter(
@@ -75,20 +82,32 @@ class WalletController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        $data = \json_decode($request->getContent(), true);
-        $title = $data['title'] ?? '';
-        if ($title === '') {
-            return $this->errorResponse('Title must be set', Response::HTTP_BAD_REQUEST);
+        $title = $request->request->get('title');
+
+        $validator = Validation::createValidator();
+        $violations = $validator->validate($title, [
+            new Length(['min' => 5]),
+            new NotBlank(),
+        ]);
+
+        if (0 !== \count($violations)) {
+            $errors = [];
+            /** @var ConstraintViolation $violation */
+            foreach ($violations as $violation) {
+                $errors['title'][] = $violation->getMessage();
+            }
+
+            return $this->errorResponse(['error' => $errors], Response::HTTP_BAD_REQUEST);
         }
 
-        $wallet = $this->walletCreator->create($user, $title);
-
-        if ($wallet === null) {
-            return $this->errorResponse('Could not create wallet');
+        try {
+            $wallet = $this->walletCreator->create($user, $title);
+        } catch (\Throwable $e) {
+            return $this->errorResponse(['error' => $e->getMessage()]);
         }
 
         return $this->successResponse([
-            'data' => $this->serializer->normalize($wallet, 'json', ['groups' => 'wallet_details'])
+            'data' => $this->serializer->normalize($wallet, 'json', ['groups' => 'wallet_details']),
         ]);
     }
 }

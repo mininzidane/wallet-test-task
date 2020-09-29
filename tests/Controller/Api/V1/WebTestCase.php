@@ -20,10 +20,17 @@ class WebTestCase extends \Symfony\Bundle\FrameworkBundle\Test\WebTestCase
 
     protected function getAuthHeader(): array
     {
-        $this->client->request(Request::METHOD_POST, '/api/v1/login', [], [], [], \json_encode([
-            'username' => 'root',
-            'password' => '123456',
-        ]));
+        $this->client->request(
+            Request::METHOD_POST,
+            '/api/v1/login',
+            [],
+            [],
+            [],
+            \json_encode([
+                'username' => 'root',
+                'password' => '123456',
+            ])
+        );
         $response = $this->client->getResponse();
         $responseBody = \json_decode($response->getContent(), true);
 
