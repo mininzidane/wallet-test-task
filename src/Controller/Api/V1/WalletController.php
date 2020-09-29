@@ -17,7 +17,6 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\Validation;
 
 class WalletController extends AbstractController
@@ -91,13 +90,7 @@ class WalletController extends AbstractController
         ]);
 
         if (0 !== \count($violations)) {
-            $errors = [];
-            /** @var ConstraintViolation $violation */
-            foreach ($violations as $violation) {
-                $errors['title'][] = $violation->getMessage();
-            }
-
-            return $this->errorResponse(['error' => $errors], Response::HTTP_BAD_REQUEST);
+            return $this->errorResponse(['error' => $this->flattenViolationErrors('title', $violations)], Response::HTTP_BAD_REQUEST);
         }
 
         try {

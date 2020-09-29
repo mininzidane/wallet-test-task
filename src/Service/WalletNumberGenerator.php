@@ -23,7 +23,7 @@ class WalletNumberGenerator
     {
         $number = $this->getRandomInt() . $this->getRandomInt();
 
-        if ($this->walletRepository->checkWalletExists($number)) {
+        if ($this->walletRepository->getByNumber($number) !== null) {
             return $this->generate();
         }
 

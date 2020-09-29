@@ -20,32 +20,20 @@ class WalletRepository extends ServiceEntityRepository
         parent::__construct($registry, Wallet::class);
     }
 
-    public function getByOwner(User $user, string $walletNumber): ?Wallet
+    public function getByNumber(string $walletNumber, ?User $user = null): ?Wallet
     {
-        return $this->createQueryBuilder('w')
-            ->innerJoin(User::class, 'u')
-            ->where('u = :user')
+        $qb = $this
+            ->createQueryBuilder('w')
             ->andWhere('w.number = :number')
-            ->setParameter('user', $user)
             ->setParameter('number', $walletNumber)
-            ->getQuery()
-            ->getOneOrNullResult()
         ;
-    }
-
-    public function checkWalletExists(string $number): bool
-    {
-        $subQueryQb = $this->createQueryBuilder('w2');
-        $subQueryQb
-            ->andWhere('w2.number = :number')
-            ->andWhere('w2.id = w1.id')
-        ;
-        $qb = $this->createQueryBuilder('w1');
-        $qb
-            ->select('1')
-            ->where($qb->expr()->exists($subQueryQb->getDQL()))
-            ->setParameter('number', $number)
-        ;
-        return $qb->getQuery()->getOneOrNullResult() !== null;
+        if ($user !== null) {
+            $qb
+                ->innerJoin(User::class, 'u')
+                ->andWhere('u = :user')
+                ->setParameter('user', $user)
+            ;
+        }
+        return $qb->getQuery()->getOneOrNullResult();
     }
 }

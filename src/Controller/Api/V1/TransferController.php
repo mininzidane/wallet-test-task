@@ -13,7 +13,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Constraints\Positive;
-use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\Validation;
 
 class TransferController extends AbstractController
@@ -73,25 +72,19 @@ class TransferController extends AbstractController
         ]);
 
         if (0 !== \count($violations)) {
-            $errors = [];
-            /** @var ConstraintViolation $violation */
-            foreach ($violations as $violation) {
-                $errors['amount'][] = $violation->getMessage();
-            }
-
-            return $this->errorResponse(['error' => $errors], Response::HTTP_BAD_REQUEST);
+            return $this->errorResponse(['error' => $this->flattenViolationErrors('amount', $violations)], Response::HTTP_BAD_REQUEST);
         }
 
         /** @var User $user */
         $user = $this->getUser();
 
-        $walletFrom = $walletRepository->getByOwner($user, $walletNumberFrom);
+        $walletFrom = $walletRepository->getByNumber($walletNumberFrom, $user);
 
         if ($walletFrom === null) {
             return $this->errorResponse(['error' => 'Wallet to transfer from not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $walletTo = $walletRepository->findOneBy(['number' => $walletNumberTo]);
+        $walletTo = $walletRepository->getByNumber($walletNumberTo);
 
         if ($walletTo === null) {
             return $this->errorResponse(['error' => 'Destination wallet not found'], Response::HTTP_NOT_FOUND);
